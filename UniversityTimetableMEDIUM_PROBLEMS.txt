@@ -1,0 +1,82 @@
+-- MySQL queries written for the medium University Timetable problems on
+-- http://sqlzoo.net/wiki/Neeps_medium_questions
+
+-- Q6
+-- Show the 'size' of each of the co72010 events. 
+-- Size is the total number of students attending each event.
+
+SELECT event.id, COUNT(DISTINCT attends.student)
+FROM event JOIN attends
+	ON event.id=attends.event
+WHERE modle='co72010'
+GROUP BY event.id
+
+-- Q7
+-- For each post-graduate module, show the size of the teaching team. 
+-- (post graduate modules start with the code co7).
+
+SELECT modle.name, 
+	COUNT(DISTINCT teaches.staff) AS size_staff
+FROM teaches JOIN event 
+	ON event.id=teaches.event
+	JOIN modle 
+	ON event.modle=modle.id
+WHERE event.modle LIKE 'co7%'
+GROUP BY modle.name
+
+-- Q8
+-- Give the full name of those modules which include events taught for fewer than 10 weeks.
+
+SELECT modle.name, COUNT(DISTINCT week)
+FROM event JOIN occurs
+	ON event.id=occurs.event
+	JOIN modle
+	ON event.modle=modle.id
+GROUP BY modle.name
+HAVING COUNT(DISTINCT week)<10
+
+
+-- Q9
+-- Identify those events which start at the same time as one of the co72010 lectures.
+
+SELECT event.id, event.tod 
+FROM event
+WHERE 
+	event.tod IN 
+	(
+		SELECT e2.tod 
+		FROM event e2
+		WHERE e2.modle='co72010'
+	)
+
+
+-- Q10
+-- How many members of staff have contact time which is greater than the average?
+
+SELECT s2.id, 
+	s2.name,
+	(
+	SELECT COALESCE(SUM(e1.duration),0)
+	FROM staff s1 JOIN teaches t1
+		ON s1.id=t1.staff
+		JOIN event e1
+		ON e1.id=t1.event
+	WHERE s1.id= s2.id
+	) AS wkly_time
+FROM staff s2
+WHERE 
+	(
+	SELECT COALESCE(SUM(e1.duration),0)
+	FROM staff s1 JOIN teaches t1
+		ON s1.id=t1.staff
+		JOIN event e1
+		ON e1.id=t1.event
+	WHERE s1.id= s2.id
+	) >
+(SELECT SUM(duration)/COUNT(DISTINCT s3.id)
+FROM staff s3 JOIN teaches t3
+	ON s3.id=t3.staff
+	JOIN event e3
+	ON e3.id=t3.event)
+ORDER BY wkly_time DESC
+

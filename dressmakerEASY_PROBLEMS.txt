@@ -1,0 +1,116 @@
+-- SQL queries written for the easy dressmaker problems on
+-- http://sqlzoo.net/wiki/Dressmaker_easy
+
+-- Q1
+-- List the post code, order number, order date and garment descriptions 
+-- for all items associated with Ms Brown.
+
+SELECT order_line.order_ref,
+	dress_order.order_date,
+	jmcust.c_name, 	
+	jmcust.c_post_code,
+	garment.description
+FROM dress_order JOIN jmcust
+	ON dress_order.cust_no=jmcust.c_no
+	JOIN order_line
+	ON order_line.order_ref=dress_order.order_no
+	JOIN garment
+	ON order_line.ol_style=garment.style_no
+WHERE jmcust.c_name='Ms Brown'
+
+
+-- Q2
+-- List the customer name, postal information, order date and order number of all 
+-- orders that have been completed.
+
+SELECT dress_order.order_no, 
+	dress_order.order_date,
+	jmcust.c_name,
+	jmcust.c_post_code
+FROM order_line JOIN dress_order
+	ON dress_order.order_no=order_line.order_ref
+	JOIN jmcust
+	ON jmcust.c_no=dress_order.cust_no
+WHERE dress_order.completed='Y'
+
+-- Q3
+-- Which garments have been made or are being made from 'red abstract' or 
+-- 'blue abstract' coloured materials.
+
+SELECT garment.style_no, garment.description, material.colour  
+FROM garment JOIN order_line
+	ON garment.style_no=order_line.ol_style
+	JOIN material
+	ON material.material_no=order_line.ol_material
+WHERE material.colour IN ('Blue Abstract', 'Red Abstract')
+
+-- Q4
+-- How many garments has each dressmaker constructed? 
+-- You should give the number of garments and the name and postal information of 
+-- each dressmaker.
+
+SELECT dressmaker.d_name,
+	COUNT(DISTINCT order_line.order_ref)
+	AS num_garments,
+	dressmaker.d_post_code
+FROM order_line JOIN construction
+	ON order_line.order_ref=construction.order_ref
+		AND order_line.line_no=construction.line_ref
+	JOIN dressmaker 
+	ON dressmaker.d_no=construction.maker
+	JOIN garment
+	ON order_line.ol_style=garment.style_no
+GROUP BY dressmaker.d_name, dressmaker.d_post_code
+
+-- Q5
+-- Give the names of those dressmakers who have finished items made from silk for 
+-- completed orders.
+
+SELECT dressmaker.d_name,
+	order_line.order_ref,
+	material.fabric
+FROM order_line JOIN dress_order
+	ON order_line.order_ref=dress_order.order_no
+	JOIN material
+	ON order_line.ol_material=material.material_no
+	JOIN construction
+	ON order_line.order_ref=construction.order_ref
+		AND order_line.line_no=construction.line_ref
+	JOIN dressmaker
+	ON dressmaker.d_no=construction.maker
+WHERE dress_order.completed='Y'
+	AND material.fabric='Silk'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

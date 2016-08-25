@@ -1,0 +1,72 @@
+-- Queries written for the easy AdventureWorks problems on
+-- http://sqlzoo.net/wiki/AdventureWorks_easy_questions
+
+-- Q1
+-- Show the first name and the email address of customer with CompanyName 
+-- 'Bike World'
+
+SELECT CustomerAW.FirstName, CustomerAW.EmailAddress
+FROM CustomerAW
+WHERE CustomerAW.CompanyName='Bike World'
+
+-- Q2
+-- Show the CompanyName for all customers with an address in 
+-- City 'Dallas'.
+SELECT CustomerAW.CompanyName
+FROM CustomerAW 
+	JOIN CustomerAddress
+	ON CustomerAW.CustomerID = CustomerAddress.CustomerID
+	JOIN Address
+	ON CustomerAddress.AddressID=Address.AddressID
+WHERE Address.City='Dallas'
+
+-- Q3
+-- How many items with ListPrice more than $1000 have been sold?
+SELECT SUM(OrderQty)
+FROM SalesOrderDetail
+	JOIN ProductAW
+	ON SalesOrderDetail.ProductID=ProductAW.ProductID
+WHERE ProductAW.ListPrice > 1000
+
+-- Q4
+-- Give the CompanyName of those customers with orders over $100000. 
+-- Include the subtotal plus tax plus freight.
+SELECT CustomerAW.CompanyName, 
+	SalesOrderHeader.SubTotal+SalesOrderHeader.TaxAmt+SalesOrderHeader.Freight
+	AS pay
+FROM CustomerAW 
+	JOIN SalesOrderHeader
+	ON CustomerAW.CustomerID = SalesOrderHeader.CustomerID
+WHERE SalesOrderHeader.SubTotal+SalesOrderHeader.TaxAmt+SalesOrderHeader.Freight>100000
+
+-- Q5
+-- Find the number of left racing socks ('Racing Socks, L') ordered by 
+-- CompanyName 'Riding Cycles'
+
+SELECT SUM(SalesOrderDetail.OrderQty) AS amt_ordered
+FROM CustomerAW
+	JOIN SalesOrderHeader
+	ON CustomerAW.CustomerID=SalesOrderHeader.CustomerID
+	JOIN SalesOrderDetail
+	ON SalesOrderHeader.SalesOrderID=SalesOrderDetail.SalesOrderID
+	JOIN ProductAW
+	ON ProductAW.ProductID=SalesOrderDetail.ProductID
+WHERE 
+	ProductAW.Name='Racing Socks, L'
+	AND CustomerAW.CompanyName='Riding Cycles'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	

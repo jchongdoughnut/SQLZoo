@@ -1,0 +1,79 @@
+-- MySQL queries written for the resit AdventureWorks problems located on
+-- http://sqlzoo.net/wiki/AdventureWorks_resit_questions
+
+-- Q1
+-- List the SalesOrderNumber for the customer 'Good Toys' 'Bike World'
+
+SELECT caw.CompanyName, sh.SalesOrderID
+FROM CustomerAW caw LEFT JOIN SalesOrderHeader sh
+	ON caw.CustomerID=sh.CustomerID
+WHERE caw.CompanyName IN ('Good Toys','Bike World')
+
+-- Q2
+-- List the ProductName and the quantity of what was ordered by 'Futuristic Bikes'
+
+SELECT paw.Name, sd.OrderQty
+FROM CustomerAW caw JOIN SalesOrderHeader sh
+	ON caw.CustomerID = sh.CustomerID
+	JOIN SalesOrderDetail sd
+	ON sh.SalesOrderID=sd.SalesOrderID
+	JOIN ProductAW paw
+	ON paw.ProductID=sd.ProductID
+WHERE caw.CompanyName='Futuristic Bikes'
+
+-- Q3
+-- List the name and addresses of companies containing the word 'Bike' (upper or lower case) and companies 
+-- containing 'cycle' (upper or lower case). 
+-- Ensure that the 'bike's are listed before the 'cycles's.
+
+SELECT caw.CompanyName, a.AddressLine1, a.AddressLine2, a.City, a.StateProvince
+FROM CustomerAW caw JOIN CustomerAddress ca
+	ON caw.CustomerID=ca.CustomerID
+	JOIN Address a
+	ON ca.AddressID=a.AddressID
+WHERE caw.CompanyName LIKE '%bike%'
+	OR caw.CompanyName LIKE '%cycle%'	
+ORDER BY (
+	CASE WHEN caw.CompanyName LIKE '%bike%' THEN 1
+	ELSE 0
+	END) DESC
+
+-- Q4
+-- Show the total order value for each CountryRegion. List by value with the highest first.
+SELECT a.CountyRegion, SUM(sh.SubTotal+sh.TaxAmt+sh.Freight)
+FROM CustomerAW caw JOIN CustomerAddress ca
+	ON caw.CustomerID=ca.CustomerID
+	JOIN Address a
+	ON ca.AddressID=a.AddressID
+	JOIN SalesOrderHeader sh
+	ON sh.CustomerID=caw.CustomerID
+	JOIN SalesOrderDetail sd
+	ON sh.SalesOrderID=sd.SalesOrderID
+GROUP BY a.CountyRegion
+ORDER BY SUM(sh.SubTotal+sh.TaxAmt+sh.Freight) DESC
+
+-- Q5
+-- Find the best customer in each region.
+
+SELECT DISTINCT z.CountyRegion,
+	(SELECT caw.CompanyName
+	FROM CustomerAW caw JOIN CustomerAddress ca
+		ON caw.CustomerID=ca.CustomerID
+		JOIN Address a
+		ON ca.AddressID=a.AddressID
+		JOIN SalesOrderHeader sh
+		ON sh.CustomerID=caw.CustomerID
+		JOIN SalesOrderDetail sd
+		ON sh.SalesOrderID=sd.SalesOrderID
+	WHERE a.CountyRegion=z.CountyRegion
+	GROUP BY caw.CompanyName
+	ORDER BY (sh.SubTotal+sh.TaxAmt+sh.Freight) DESC
+	LIMIT 1)
+FROM Address z
+
+
+
+
+
+
+

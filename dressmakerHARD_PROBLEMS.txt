@@ -1,0 +1,97 @@
+-- MySQL queries written for the hard Dressmaker problems on
+-- http://sqlzoo.net/wiki/Dressmaker_hard
+
+-- Q2
+-- How much did each material contribute to turnover
+-- in 2002?
+SELECT material_no, 
+	SUM(material.cost) AS 2002_total
+FROM order_line JOIN material
+	ON order_line.ol_material=material.material_no
+	JOIN dress_order
+	ON dress_order.order_no=order_line.order_ref
+WHERE EXTRACT(year FROM order_date)=2002
+GROUP BY material_no
+
+
+-- Q4
+-- Identify the customers who spent the most in 2002
+-- on items over 20 in value
+SELECT jmcust.c_no,
+	jmcust.c_name,
+	SUM(material.cost+garment.labour_cost) AS money
+FROM dress_order JOIN jmcust
+	ON jmcust.c_no=dress_order.cust_no
+	JOIN order_line ON order_line.order_ref=dress_order.order_no
+	JOIN garment ON order_line.ol_style=garment.style_no
+	JOIN material ON order_line.ol_material=material.material_no
+WHERE EXTRACT(year FROM order_date)=2002
+	AND (material.cost+garment.labour_cost>20)
+GROUP BY jmcust.c_no, jmcust.c_name
+ORDER BY money DESC
+
+-- Q5
+-- Who is the fastest at making trousers?
+SELECT dressmaker.d_name, 
+	construction.start_date, 
+	construction.finish_date,
+	TO_DAYS(construction.finish_date)-TO_DAYS(construction.start_date) AS length
+FROM dressmaker JOIN construction
+	ON dressmaker.d_no=construction.maker
+	JOIN order_line 
+	ON order_line.order_ref=construction.order_ref
+		AND order_line.line_no=construction.line_ref
+	JOIN garment
+		ON order_line.ol_style=garment.style_no
+WHERE garment.description='Trousers' AND finish_date IS NOT NULL
+ORDER BY length ASC
+LIMIT 1
+
+-- Q6
+-- "Employee of the month" is the seamstress who completes the greatest value of clothes. 
+-- Show the "employees of the month" for months in 2002.
+SELECT
+	DISTINCT EXTRACT(month FROM dress_order.order_date) AS month,
+	(
+		SELECT dressmaker2.d_name
+		FROM dressmaker dressmaker2 JOIN construction construction2
+			ON dressmaker2.d_no=construction2.maker
+			JOIN order_line order_line2
+			ON order_line2.order_ref=construction2.order_ref
+				AND order_line2.line_no=construction2.line_ref
+			JOIN garment garment2
+				ON order_line2.ol_style=garment2.style_no
+			JOIN material material2
+				ON order_line2.ol_material=material2.material_no
+			JOIN dress_order dress_order2
+				ON order_line2.order_ref=dress_order2.order_no
+		WHERE EXTRACT(year FROM dress_order2.order_date)=2002
+			AND EXTRACT(month FROM dress_order2.order_date)=EXTRACT(month FROM dress_order.order_date)
+		GROUP BY dressmaker2.d_no, dressmaker2.d_name
+		ORDER BY SUM(garment2.labour_cost+material2.cost) DESC
+		LIMIT 1
+	) AS emp_of_month,
+	(
+		SELECT SUM(garment3.labour_cost+material3.cost)
+		FROM dressmaker dressmaker3 JOIN construction construction3
+			ON dressmaker3.d_no=construction3.maker
+			JOIN order_line order_line3
+			ON order_line3.order_ref=construction3.order_ref
+				AND order_line3.line_no=construction3.line_ref
+			JOIN garment garment3
+				ON order_line3.ol_style=garment3.style_no
+			JOIN material material3
+				ON order_line3.ol_material=material3.material_no
+			JOIN dress_order dress_order3
+				ON order_line3.order_ref=dress_order3.order_no
+		WHERE EXTRACT(year FROM dress_order3.order_date)=2002
+			AND EXTRACT(month FROM dress_order3.order_date)=EXTRACT(month FROM dress_order.order_date)
+		GROUP BY dressmaker3.d_no
+		ORDER BY SUM(garment3.labour_cost+material3.cost) DESC
+		LIMIT 1
+	) AS total_of_month
+FROM dress_order
+ORDER BY month ASC
+
+
+

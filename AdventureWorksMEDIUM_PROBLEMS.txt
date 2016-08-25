@@ -1,0 +1,121 @@
+-- MySQL queries written for the Medium AdventureWorks problems
+-- on http://sqlzoo.net/wiki/AdventureWorks_medium_questions
+
+-- Q6
+-- A "Single Item Order" is a customer order where only one item is ordered. 
+-- Show the SalesOrderID and the UnitPrice for every Single Item Order.
+
+SELECT SalesOrderID, SUM(UnitPrice) AS Unit_Price
+FROM SalesOrderDetail
+GROUP BY SalesOrderID
+HAVING COUNT(DISTINCT ProductID)=1
+	AND SUM(OrderQty)=1
+
+-- Q7
+-- Where did the racing socks go? 
+-- List the product name and the CompanyName for all Customers who 
+-- ordered ProductModel 'Racing Socks'.
+
+SELECT CustomerAW.FirstName, 
+	CustomerAW.LastName,
+	CustomerAW.CompanyName,
+	ProductModel.Name,
+	SUM(SalesOrderDetail.OrderQty) AS qty_ordered
+FROM ProductAW 
+	JOIN ProductModel 
+	ON (ProductAW.ProductModelID=ProductModel.ProductModelID)
+	JOIN SalesOrderDetail
+	ON (SalesOrderDetail.ProductID=ProductAW.ProductID)
+	JOIN SalesOrderHeader
+	ON (SalesOrderDetail.SalesOrderID=SalesOrderHeader.SalesOrderID)
+	JOIN CustomerAW
+	ON SalesOrderHeader.CustomerID=CustomerAW.CustomerID
+WHERE ProductModel.Name='Racing Socks'
+GROUP BY CustomerAW.FirstName,
+	CustomerAW.LastName,
+	CustomerAW.CompanyName,
+	ProductModel.Name
+
+-- Q8
+-- Show the product description for culture 'fr' for product with 
+-- ProductID 736.
+
+SELECT ProductAW.Name, ProductDescription.Description
+FROM ProductAW
+	JOIN ProductModelProductDescription
+	ON ProductAW.ProductModelID=ProductModelProductDescription.ProductModelID
+	JOIN ProductDescription
+	ON ProductModelProductDescription.ProductDescriptionID=ProductDescription.ProductDescriptionID
+WHERE ProductAW.ProductID=736
+	AND ProductModelProductDescription.Culture='fr'
+
+-- Q9
+-- Use the SubTotal value in SalesOrderHeader to list orders from the 
+-- largest to the smallest. For each order show the CompanyName and 
+-- the SubTotal and the total weight of the order.
+SELECT CompanyName, 
+	SubTotal, 
+	SubTotal+TaxAMT+Freight AS tot_weight
+FROM CustomerAW
+	JOIN SalesOrderHeader
+	ON (SalesOrderHeader.CustomerID=CustomerAW.CustomerID)
+ORDER BY tot_weight DESC
+
+-- Q10
+-- How many products in ProductCategory 'Cranksets' have been sold to an 
+-- address in 'London'?
+
+SELECT ProductAW.Name, SalesOrderDetail.OrderQty
+FROM SalesOrderHeader
+	JOIN Address
+	ON (SalesOrderHeader.ShipToAddressID=Address.AddressID)
+	JOIN SalesOrderDetail
+	ON SalesOrderHeader.SalesOrderID=SalesOrderDetail.SalesOrderID
+	JOIN ProductAW
+	ON SalesOrderDetail.ProductID=ProductAW.ProductID
+	JOIN ProductCategory
+	ON ProductAW.ProductCategoryID=ProductCategory.ProductCategoryID
+WHERE ProductCategory.Name='Cranksets'
+	AND Address.City='London'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

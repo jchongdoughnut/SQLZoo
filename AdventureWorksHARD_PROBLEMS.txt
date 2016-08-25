@@ -1,0 +1,118 @@
+-- MySQL queries written for the hard AdventureWorks problems on
+-- http://sqlzoo.net/wiki/AdventureWorks_hard_questions
+
+-- Q11
+-- For every customer with a 'Main Office' in Dallas show 
+-- AddressLine1 of the 'Main Office' and AddressLine1 of the 
+-- 'Shipping' address - if there is no shipping address leave it blank. 
+-- Use one row per customer.
+
+SELECT CustomerAddress.CustomerID, 
+	CustomerAddress.AddressType,
+	a1.City AS office_city,
+	a1.AddressLine1 AS office_AddL1,
+	a2.AddressLine1 AS ship_AddL1
+FROM Address a1 JOIN CustomerAddress
+	ON a1.AddressID=CustomerAddress.AddressID
+	LEFT JOIN SalesOrderHeader sh
+	ON sh.CustomerID=CustomerAddress.CustomerID
+	LEFT JOIN Address a2
+	ON sh.ShipToAddressID=a2.AddressID
+WHERE a1.City='Dallas'
+	AND CustomerAddress.AddressType='Main Office'
+	
+-- Q12
+-- For each order show the SalesOrderID and SubTotal calculated three ways: 
+-- A) From the SalesOrderHeader 
+-- B) Sum of OrderQty*UnitPrice 
+-- C) Sum of OrderQty*ListPrice
+
+SELECT sh.SalesOrderID, 
+	sh.subtotal AS part_a, 
+	SUM(sd.OrderQty*sd.UnitPrice) AS part_b, 
+	SUM(sd.OrderQty*paw.ListPrice) AS part_c
+FROM SalesOrderHeader sh JOIN SalesOrderDetail sd
+  ON sh.SalesOrderID=sd.SalesOrderID
+  JOIN ProductAW paw
+  ON paw.ProductID=sd.ProductID
+GROUP BY sh.SalesOrderID, sh.subtotal
+
+-- Q13
+-- Show the best selling item by value.
+
+SELECT paw.Name, 
+	SUM(Coalesce(sd.OrderQty,0)) AS amt_sold
+FROM ProductAW paw LEFT JOIN SalesOrderDetail sd
+	ON paw.ProductID=sd.ProductID
+GROUP BY paw.Name
+ORDER BY amt_sold DESC
+
+-- Q14
+-- Show how many orders are in the following ranges (in $):
+-- 0-99
+-- 100-999
+-- 1000-9999
+-- 10000-
+
+SELECT (
+	CASE WHEN ((sh.Subtotal+sh.TaxAmt+sh.Freight) BETWEEN 0 AND 99) 
+		THEN '0-99'
+	WHEN ((sh.Subtotal+sh.TaxAmt+sh.Freight) BETWEEN 100 AND 999)
+		THEN '100-999'
+	WHEN ((sh.Subtotal+sh.TaxAmt+sh.Freight) BETWEEN 1000 AND 9999)
+		THEN '1000-9999'
+	WHEN ((sh.Subtotal+sh.TaxAmt+sh.Freight)>=10000) 
+		THEN '10000-'
+	ELSE 0
+	END) AS r,
+	COUNT(*) AS num_orders,
+	SUM(sh.Subtotal+sh.TaxAmt+sh.Freight) AS total_value
+FROM SalesOrderHeader sh
+GROUP BY r
+
+-- Q15
+-- Identify the three most important cities. 
+-- Show the break down of top level product category against city.
+
+
+SELECT addr.City,
+	(SELECT pc2.Name
+	FROM SalesOrderHeader sh2 JOIN SalesOrderDetail sd2
+		ON sh2.SalesOrderID=sd2.SalesOrderID
+		JOIN ProductAW paw2
+		ON paw2.ProductID = sd2.ProductID
+		JOIN Address addr2
+		ON addr2.AddressID=sh2.ShipToAddressID
+		JOIN ProductCategory pc2
+		ON pc2.ProductCategoryID=paw2.ProductCategoryID
+	WHERE addr2.city=addr.City
+	GROUP BY pc2.Name
+	ORDER BY SUM(sd2.OrderQty) DESC
+	LIMIT 1) AS top_category
+
+FROM SalesOrderHeader sh JOIN SalesOrderDetail sd
+	ON sh.SalesOrderID=sd.SalesOrderID
+	JOIN ProductAW paw
+	ON paw.ProductID = sd.ProductID
+	JOIN Address addr
+	ON addr.AddressID=sh.ShipToAddressID
+GROUP BY addr.City
+ORDER BY SUM(sd.OrderQty) DESC
+LIMIT 3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

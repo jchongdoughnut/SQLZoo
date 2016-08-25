@@ -1,0 +1,171 @@
+-- MySQL queries written for the hard University Timetable problems on
+-- http://sqlzoo.net/wiki/Neeps_hard_questions
+
+-- Q11
+-- co.CHt is to be given all the teaching that co.ACg currently does. 
+-- Identify those events which will clash.
+
+SELECT DISTINCT e1.id, 
+	e1.tod,
+	e1.dow,
+	e1.duration,
+	e2.id,
+	e2.tod,
+	e2.dow,
+	e2.duration
+FROM event e1 JOIN event e2
+	ON e1.dow=e2.dow
+	JOIN teaches t1
+	ON t1.event=e1.id
+	JOIN teaches t2
+	ON t2.event=e2.id
+WHERE t1.staff='co.ACg'
+	AND t2.staff='co.CHt'
+	AND e1.dow=e2.dow
+	AND e1.id != e2.id
+	AND SUBSTRING(e1.id FROM 10 FOR 11) <=SUBSTRING(e2.id FROM 10 FOR 11)
+	AND	(
+			e1.tod=e2.tod
+			OR ((e2.tod-'1:00'=e1.tod-'0:00') AND e1.duration=2)
+			OR ((e1.tod-'1:00'=e2.tod-'0:00') AND e2.duration=2)
+			)	
+
+-- Q12 - There is a error on question 12. The room database
+-- does not match with the event database. Unable to complete.
+
+-- Q13 
+-- A one hour staff meeting is to be held between 09:00 and 17:00. 
+-- Events which clash are to be cancelled. Identify the hour which 
+-- will result in the least disruption.
+
+SELECT event.dow, 
+	event.tod, 
+	COUNT(DISTINCT student.id)+COUNT(DISTINCT staff.id)
+	+(SELECT COUNT(DISTINCT s3.id)+COUNT(DISTINCT st3.id)
+		FROM student s3 JOIN attends a3
+			ON s3.id=a3.student
+			JOIN event e3
+			ON a3.event=e3.id
+			JOIN teaches t3
+			ON t3.event=e3.id
+			JOIN staff st3
+			ON st3.id=t3.staff
+		WHERE e3.tod-'0:00'=event.tod-'1:00' 
+			AND e3.duration=2
+			AND e3.dow=event.dow) AS ppl_cancelled
+FROM student JOIN attends
+	ON student.id=attends.student
+	JOIN event
+	ON attends.event=event.id
+	JOIN teaches
+	ON teaches.event=event.id
+	JOIN staff
+	ON staff.id=teaches.staff
+WHERE event.tod NOT IN ('17:00','18:00','19:00', '20:00')
+GROUP BY event.dow, event.tod
+ORDER BY ppl_cancelled ASC
+LIMIT 1
+
+
+-- Q14
+-- Find all clashes - include the events which clash and the staff, student or rooms that they have in 
+-- common.
+SELECT DISTINCT e1.id,
+	e1.tod, 
+	e2.id, 
+	e2.tod,
+	(CASE WHEN a1.student=a2.student THEN 
+		(SELECT student.name
+		FROM student
+		WHERE student.id=a1.student
+		)
+	WHEN t1.staff=t2.staff THEN 
+		(SELECT staff.name
+		FROM staff
+		WHERE staff.id=t1.staff
+		)
+	ELSE 0
+	END) AS affected_person
+FROM event e1 JOIN event e2
+	ON e1.dow=e2.dow
+	JOIN teaches t1
+	ON t1.event=e1.id
+	JOIN teaches t2
+	ON t2.event=e2.id
+	JOIN attends a1
+	ON a1.event=e1.id
+	JOIN attends a2
+	ON a2.event=e2.id
+WHERE ((e1.id != e2.id) AND SUBSTRING(e1.id FROM 10 FOR 11) <= SUBSTRING(e2.id FROM 10 FOR 11))
+	AND (
+		(e1.tod=e2.tod)
+		OR
+		(  ((e1.tod-'1:00'=e2.tod-'0:00')
+			AND
+			e2.duration=2)
+			OR
+			((e2.tod-'1:00'=e1.tod-'0:00')
+			AND
+			e1.duration=2)
+		))
+	AND (
+		(t1.staff=t2.staff)
+		OR
+		(a1.student=a2.student)
+		)
+ORDER BY e1.tod	
+
+-- Q15
+-- Produce a timetable for a group of full time students for week 1
+
+SELECT s1.name, 
+	m1.name, 
+	e1.dow,
+	(CASE WHEN dow='Monday' THEN 1
+		WHEN dow='Tuesday' THEN 2
+		WHEN dow='Wednesday' THEN 3
+		WHEN dow='Thursday' THEN 4
+		WHEN dow='Friday' THEN 5
+		ELSE 0
+		END)
+	AS dow_num, 
+	e1.tod,
+	e1.duration
+FROM attends a1 JOIN event e1
+	ON a1.event=e1.id
+	JOIN student s1
+	ON s1.id=a1.student
+	JOIN modle m1
+	ON m1.id=e1.modle
+	JOIN occurs o1
+	ON o1.event=e1.id
+WHERE a1.student IN
+	(
+	SELECT a2.student
+	FROM attends a2 JOIN event e2
+		ON a2.event=e2.id
+		JOIN occurs o2 
+		ON o2.event=e2.id
+	WHERE o2.week=01
+	GROUP BY a2.student
+	HAVING SUM(e2.duration)>12
+	)
+	AND o1.week=01
+ORDER BY s1.name, dow_num ASC, tod
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

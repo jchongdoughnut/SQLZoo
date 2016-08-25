@@ -1,0 +1,97 @@
+-- MySQL queries written for the easy University Timetable problems on
+-- http://sqlzoo.net/wiki/Neeps_easy_questions
+
+-- Q1
+-- Give the room id in which the event co42010.L01 takes place.
+
+SELECT event.room
+FROM event
+WHERE event.id='co42010.L01'
+
+-- Q2
+-- For each event in module co72010 show the day, the time and the place.
+
+SELECT event.id, 
+	event.dow AS day, 
+	event.tod AS time, 
+	event.room AS loc
+FROM event
+WHERE modle='co72010'
+
+-- Q3
+-- List the names of the staff who teach on module co72010.
+SELECT DISTINCT staff.name
+FROM teaches JOIN event
+	ON teaches.event=event.id
+	JOIN staff
+	ON teaches.staff=staff.id
+WHERE event.modle='co72010'
+
+-- Q4
+-- Give a list of the staff and module number associated with events using room cr.132 on 
+-- Wednesday, include the time each event starts.
+
+SELECT staff.name, event.modle AS module, tod AS time
+FROM event JOIN teaches
+	ON teaches.event=event.id
+	JOIN staff
+	ON staff.id=teaches.staff
+WHERE room='cr.132'
+	AND dow='Wednesday'
+
+-- Q5
+-- Give a list of the student groups which take modules 
+-- with the word 'Database' in the name.
+
+SELECT student.id, student.name, modle.name
+FROM student JOIN attends
+	ON student.id=attends.student
+	JOIN event
+	ON attends.event=event.id
+	JOIN modle
+	ON event.modle=modle.id
+WHERE modle.name LIKE '%Database%'
+ORDER BY modle.name
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

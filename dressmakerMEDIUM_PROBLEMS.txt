@@ -1,0 +1,95 @@
+-- MySQL queries written for the medium Dressmaker problems on
+-- http://sqlzoo.net/wiki/Dressmaker_medium
+
+-- Q1
+-- List the garments having labour costs 80% or more of the total cost
+SELECT garment.description, 
+	material.fabric, 
+	material.colour,
+	material.pattern,
+	garment.labour_cost,
+	material.cost+garment.labour_cost AS total_cost
+FROM order_line JOIN garment
+	ON order_line.ol_style=garment.style_no
+	JOIN material
+	ON order_line.ol_material=material.material_no
+WHERE garment.labour_cost>0.8*(material.cost+garment.labour_cost)
+
+
+-- Q2
+-- Select the garments that have less than the average number of orders per garment
+-- placed.
+
+SELECT garment2.style_no, COUNT(*)
+FROM order_line order_line2 JOIN garment garment2
+	ON order_line2.ol_style=garment2.style_no
+	JOIN dress_order dress_order2
+	ON dress_order2.order_no=order_line2.order_ref
+WHERE dress_order2.completed='Y'
+GROUP BY garment2.style_no
+HAVING COUNT(*)<
+	(-- This section calculates the avg number of orders per garment
+		SELECT COUNT(*)/COUNT(DISTINCT style_no)
+		FROM order_line JOIN garment
+			ON order_line.ol_style=garment.style_no
+			JOIN dress_order
+			ON dress_order.order_no=order_line.order_ref
+		WHERE dress_order.completed='Y'
+	)
+
+-- Q3
+-- Find the most popular line
+SELECT garment.style_no,
+	garment.description,
+	COUNT(*) AS num_orders
+FROM order_line JOIN garment
+	ON order_line.ol_style=garment.style_no
+	JOIN dress_order
+	ON dress_order.order_no=order_line.order_ref
+GROUP BY garment.style_no, garment.description
+ORDER BY num_orders DESC
+
+
+-- Q4
+-- List Descriptions & total costs of garments having
+-- size 8 and Cotton fabric
+
+SELECT garment.style_no, 
+	garment.description, 	
+	material.cost+garment.labour_cost AS tot_cost
+FROM order_line JOIN material
+	ON order_line.ol_material=material.material_no
+	JOIN dress_order ON dress_order.order_no=order_line.order_ref
+	JOIN garment ON garment.style_no=order_line.ol_style
+WHERE material.fabric='Cotton' AND ol_size=8
+	
+-- Q5
+-- Find the most popular sizes for each garment
+
+SELECT garment.style_no,
+	garment.description,
+	order_line.ol_size,
+	COUNT(*) AS num_orders
+FROM order_line JOIN garment
+	ON order_line.ol_style=garment.style_no
+	JOIN dress_order
+	ON dress_order.order_no=order_line.order_ref
+GROUP BY garment.style_no, garment.description, order_line.ol_size
+HAVING COUNT(*)>= ALL(
+							SELECT COUNT(*)
+							FROM order_line order_line2 JOIN garment garment2
+								ON order_line2.ol_style=garment2.style_no
+								JOIN dress_order dress_order2
+								ON dress_order2.order_no=order_line2.order_ref
+							WHERE garment2.style_no=garment.style_no
+							GROUP BY garment2.style_no, garment2.description, order_line2.ol_size
+							ORDER BY garment2.style_no, COUNT(*) DESC)
+ORDER BY garment.style_no, COUNT(*) DESC
+
+
+
+
+
+
+
+

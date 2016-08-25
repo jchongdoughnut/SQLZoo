@@ -1,0 +1,63 @@
+-- MySQL problems written for the resit University Timetable problems on
+-- http://sqlzoo.net/wiki/Neeps_resit_questions
+
+
+-- Q1
+-- Give the day and the time of the event co72002.L01.
+
+SELECT id, dow, tod
+FROM event
+WHERE id='co72002.L01'
+
+-- Q2
+-- For each event in module co72003 show the day, the time and the place.
+
+SELECT modle.name, 
+	event.dow, 
+	event.tod, 
+	event.room
+FROM modle JOIN event
+	ON modle.id=event.modle
+WHERE modle.id='co72003'
+
+-- Q3
+-- List the id of the events taught by 'Chisholm, Ken'.
+
+SELECT teaches.id
+FROM staff JOIN teaches
+	ON staff.id=teaches.staff
+WHERE staff.name='Chisholm, Ken'
+
+-- Q4
+-- List the staff who teach in cr.SMH.
+
+SELECT staff.name
+FROM staff JOIN teaches
+	ON staff.id=teaches.staff
+	JOIN event
+	ON teaches.event=event.id
+WHERE event.room='cr.SMH'
+
+-- Q5
+-- Show the total number of hours (over the whole semester) of classes for com.IS.a
+SELECT SUM(duration)
+FROM occurs JOIN event
+	ON event.id=occurs.event
+	JOIN attends
+	ON attends.event=event.id
+	JOIN student
+	ON student.id=attends.student
+WHERE student.id='com.IS.a'
+
+
+
+
+
+
+
+
+
+
+
+
+
