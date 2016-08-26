@@ -1,0 +1,88 @@
+order_line(order_ref, line_no, ol_style, ol_size, ol_material)
+	order_line JOIN material
+	ON order_line.ol_material=material.material_no
+
+	order_line JOIN garment
+	ON order_line.ol_style=garment.style_no
+
+	order_line JOIN quantities
+	ON 
+	order_line.ol_style=quantities.style_q
+	AND order_line.ol_size=quantities.size_q
+
+	order_line JOIN dress_order
+	ON order_line.ref=dress_order.order_no
+	
+	order_line JOIN construction
+	ON order_line.order_ref=construction.order_ref
+	AND order_line.line_no=construction.line_ref
+
+
+material(material_no, fabric, colour, pattern, cost)
+	material JOIN order_line
+	ON material.material_no=order_line.ol_material
+
+garment(style_no, description, labour_cost, notions)
+	garment JOIN order_line
+	ON order_line.ol_style=garment.style_no
+
+% quantities gives how much material is required
+% for every garment for every size
+quantities(style_q, size_q, quantity)
+	order_line JOIN quantities
+	 ON (order_line.ol_style=style_q AND ol_size=size_q)
+
+% jmcust gives customer information
+jmcust(c_no, c_name, c_house_no, c_post_code)
+	jmcust JOIN dress_order
+	ON jmcust.c_no=dress_order.cust_no
+
+% dress order is the log of orders
+dress_order(order_no, cust_no, order_date, completed)
+	dress_order JOIN order_line
+	ON dress_order.order_no=order_line.order_ref
+
+% dress maker
+dressmaker(d_no, d_name, d_house_no, d_post_code)
+	dressmaker JOIN construction
+	ON dressmaker.d_no=construction.maker
+
+% construction
+construction(maker, order_ref, line_ref, start_date, finish_date)
+	construction JOIN order_line
+	ON order_line.order_ref=construction.order_ref
+	AND order_line.line_no=construction.line_ref
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

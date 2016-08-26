@@ -1,0 +1,85 @@
+-- MySQL queries used to solve the problems on
+-- http://sqlzoo.net/wiki/Music_Tutorial
+
+-- Q1: Find the title and artist who recoded the song 'Alison'
+
+SELECT album.title, album.artist
+FROM album JOIN track
+	ON album.asin=track.album
+	WHERE track.song='Alison' 
+
+-- Q2: Which artist recorded the song 'Exodus'?
+
+SELECT album.artist
+FROM album JOIN track
+	ON album.asin = track.album
+WHERE track.song='Exodus'
+
+-- Q3: Show the song and each track on the album 'Blur'
+
+SELECT track.song
+FROM album JOIN track
+	ON album.asin=track.album
+WHERE album.title='Blur'
+
+-- Q4: For each album, show the title and the total number of track
+
+SELECT album.title, COUNT(track.song)
+FROM album JOIN track
+	ON album.asin=track.album
+GROUP BY album.asin, album.title
+ORDER BY album.title
+
+-- Q5: For each album show the title and the total number of tracks containing the word
+-- 'Heart'
+SELECT album.title, COUNT(track.song)
+FROM album JOIN track
+	ON album.asin=track.album
+WHERE track.song LIKE '%Heart%'
+GROUP BY album.asin, album.title
+ORDER BY album.title
+
+-- Q6: A "title track" is where the song is the same as the title. Find the title tracks.
+SELECT track.song
+FROM album JOIN track
+	ON album.asin=track.album
+WHERE track.song=album.title
+
+-- Q7: An "eponymous" album is one where the title is the same as the artist 
+-- (for example the album 'Blur' by the band 'Blur'). Show the eponymous albums.
+
+SELECT album.title
+FROM album
+WHERE album.artist=album.title
+
+-- Q8: Find the songs that appear on more than 2 albums. 
+-- Include a count of the number of times each shows up.
+SELECT track.song, 
+	COUNT(DISTINCT track.album) AS num_appearances
+FROM album JOIN track
+	ON album.asin=track.album
+GROUP BY track.song
+HAVING COUNT(track.album) > 2
+
+-- Q9: Find the albums with price per track less than 0.5
+SELECT album.title, album.price, COUNT(track.song)
+FROM album JOIN track
+	ON album.asin=track.album
+GROUP BY album.asin, album.title, album.price
+HAVING album.price/COUNT(track.song) < 0.5
+
+-- Q10: List albums so that the album with the most tracks is first. 
+-- Show the title and the number of tracks
+
+SELECT album.title, COUNT(track.song) AS num_tracks
+FROM album JOIN track
+	ON album.asin=track.album
+GROUP BY album.asin, album.title
+ORDER BY num_tracks DESC
+
+
+
+
+
+
+
