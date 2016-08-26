@@ -1,0 +1,115 @@
+-- MySQL queries used to solve the problems on
+-- http://sqlzoo.net/wiki/SELECT_from_WORLD_Tutorial
+
+-- Q2: Show the name of the countries having a
+-- population of at least 200 million
+
+SELECT name FROM world
+WHERE population >= 200000000
+
+-- Q3: Give the name and per capita GDP for countries with population of at least 200 million
+
+SELECT name,
+	gdp/population
+FROM world
+WHERE population >= 200000000
+
+-- Q4: Show the name and population in millions for the countries of South America
+
+SELECT name,
+	population/1000000
+FROM world
+WHERE continent='South America'
+
+-- Q5: Show the name and population for France, Germany, Italy
+
+SELECT name, population
+FROM world
+WHERE name IN ('France', 'Germany', 'Italy')
+
+-- Q6: Show the countries that have a name that includes the world 'United'
+
+SELECT name
+FROM world
+WHERE name LIKE '%United%'
+
+-- Q7: Show the countries having population more than 250 million or area more than 3 million
+-- sq km
+
+SELECT name,
+	population,
+	area
+FROM world
+WHERE population > 250000000
+	OR area > 3000000
+
+-- Q8: Show the countries having population more than 250 million or area more than 3 million
+-- sq km, but not both
+SELECT name,
+	population,
+	area
+FROM world
+WHERE population > 250000000
+	XOR area > 3000000
+
+-- Q9: Show the population (in millions) and gdp (in billions) for countries in South America
+SELECT name, 
+	ROUND(population/1000000,2) AS population_millions, 
+	ROUND(gdp/1000000000,2) AS gdp_billions
+FROM world
+WHERE continent='South America'
+
+-- Q10: Show name and per-capita GDP for countries with a GDP of at least a trillion. Round
+-- to the nearest 1000
+SELECT name,
+	ROUND(gdp/population,-3) AS gdp_per_capita
+FROM world
+WHERE gdp>=1000000000000
+
+-- Q11: Show the name, continent for countries beginning with N.
+-- Substitute Australaisa for Oceania.
+
+SELECT name,
+	(CASE WHEN continent='Oceania'
+		THEN 'Australasia'
+	ELSE continent
+	END) AS continent
+FROM world
+WHERE name LIKE 'N%'
+
+-- Q12: Show the name and the continent - but substitute Eurasia for Europe and Asia; 
+-- substitute America - for each country in North America or South America or Caribbean. 
+-- Show countries beginning with A or B
+
+SELECT name,
+	(CASE WHEN continent IN ('Europe', 'Asia')
+		THEN 'Eurasia'
+	WHEN continent IN ('North America', 'South America', 'Caribbean')
+		THEN 'America'
+	ELSE continent
+	END) AS continent
+FROM world
+WHERE name LIKE 'A%'
+	OR name LIKE 'B%'
+
+-- Q13: Put the continents right...
+-- Oceania becomes Australasia
+-- Countries in Eurasia and Turkey go to Europe/Asia
+-- Caribbean islands starting with 'B' go to North America, other Caribbean islands go to South America
+-- Order by country name in ascending order
+-- Show the name, the original continent and the new continent of all countries.
+
+SELECT name,
+	continent,
+	(CASE WHEN continent='Oceania' THEN 'Australasia'
+		WHEN continent = 'Eurasia' OR name='Turkey' THEN 'Europe/Asia'
+		WHEN continent='Caribbean' AND name LIKE 'B%' THEN 'North America'
+		WHEN continent='Caribbean' AND name NOT LIKE 'B%' THEN 'South America'
+		ELSE continent
+	END) AS new_continent
+FROM world
+ORDER BY name ASC
+
+
+
+

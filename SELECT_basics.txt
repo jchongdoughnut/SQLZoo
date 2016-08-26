@@ -1,0 +1,19 @@
+-- MySQL queries used to solve the problems on
+-- http://sqlzoo.net/wiki/SELECT_basics
+
+-- Q1: Show the population of Germany
+SELECT population
+FROM world
+WHERE name='Germany'
+
+-- Q2: Show the name and population for
+-- Ireland, Iceland, and Denmark
+SELECT name, population
+FROM world
+WHERE name IN ('Ireland', 'Iceland', 'Denmark')
+
+-- Q3: Show the name and area of the countries have area between 200,000 and 250,000
+
+SELECT name, area
+FROM world
+WHERE area BETWEEN 200000 AND 250000
